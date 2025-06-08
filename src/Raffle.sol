@@ -39,6 +39,11 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     error Raffle__SendMoreToEnterRaffle();
     error Raffle__TransferFailed();
     error Raffle__NotOpen();
+    error Raffle__UpkeepNotNeeded(
+        uint256 playersLength,
+        uint256 contractBalance,
+        uint256 raffleState
+    );
 
     /**
      * Type Declarations
@@ -110,7 +115,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
      * 5. Implicitly, your subscription is funded with LINK.
      */
     function checkUpkeep(
-        bytes calldata /* checkData */
+        bytes memory /* checkData */
     ) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
         bool isOpen = (s_raffleState == RaffleState.OPEN);
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
@@ -127,9 +132,12 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     function performUpkeep(bytes calldata /* performData */) external {
         // check to see if enough time has passed
         (bool upkeepNeeded, ) = checkUpkeep("");
-
         if (!upkeepNeeded) {
-            revert();
+            revert Raffle__UpkeepNotNeeded(
+                s_players.length,
+                address(this).balance,
+                uint256(s_raffleState)
+            );
         }
         // Change the raffle state
         s_raffleState = RaffleState.CALCULATING;
@@ -146,12 +154,12 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
                 )
             });
 
-        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+        s_vrfCoordinator.requestRandomWords(request);
     }
 
     // CEI: Check, Effect, Interact pattern
     function fulfillRandomWords(
-        uint256 requestId,
+        uint256 /*requestId*/,
         uint256[] calldata randomWords
     ) internal override {
         // Effect (Internal state changes)
