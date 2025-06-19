@@ -1,2 +1,4 @@
 chainlink/=lib/chainlink/contracts/
 forge-std/=lib/forge-std/src/
+@solmate/=lib/solmate/src/
+@foundry-devops/=lib/foundry-devops/src/
