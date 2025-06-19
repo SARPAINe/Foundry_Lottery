@@ -5,6 +5,8 @@ import {Test} from "forge-std/Test.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {Raffle} from "src/Raffle.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {console} from "forge-std/console.sol";
 
 contract RaffleTest is Test {
     Raffle public raffle;
@@ -34,6 +36,7 @@ contract RaffleTest is Test {
         gasLane = config.gasLane;
         callbackGasLimit = config.callbackGasLimit;
         subscriptionId = config.subscriptionId;
+        console.log("subscriptionid inside console:", subscriptionId);
     }
 
     function testRaffleInitializesInOpenState() public view {
@@ -160,5 +163,25 @@ contract RaffleTest is Test {
             )
         );
         raffle.performUpkeep("");
+    }
+
+    function testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId() public {
+        // Arrange
+        vm.prank(PLAYER_1);
+        vm.deal(PLAYER_1, STARTING_PLAYERS_BALANCE);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+
+        // Act
+        vm.recordLogs();
+        raffle.performUpkeep("");
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes32 subId = entries[0].topics[2];
+        // Assert
+        // console.log("SubId:", subId);
+        console.log("SubscriptionId:", subscriptionId);
+        console.log("SubId:", uint256(subId));
+        assert(uint256(subId) == subscriptionId);
     }
 }
