@@ -51,6 +51,10 @@ contract HelperConfig is CodeConstants, Script {
         }
     }
 
+    function setConfig(uint256 chainId, NetworkConfig memory config) public {
+        networkConfigs[chainId] = config;
+    }
+
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
         return
             NetworkConfig({

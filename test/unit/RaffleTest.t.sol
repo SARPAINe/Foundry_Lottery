@@ -179,9 +179,6 @@ contract RaffleTest is Test {
         Vm.Log[] memory entries = vm.getRecordedLogs();
         bytes32 subId = entries[0].topics[2];
         // Assert
-        // console.log("SubId:", subId);
-        console.log("SubscriptionId:", subscriptionId);
-        console.log("SubId:", uint256(subId));
         assert(uint256(subId) == subscriptionId);
     }
 }
